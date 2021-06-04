@@ -1,0 +1,40 @@
+;; FED file made for MSK Project
+
+;; TODO: Bridge class
+(FED
+  (Federation producer-consumer)
+  (FEDversion v1.3)
+  (spaces
+    (space TestSpace
+      (dimension TestDimension)
+    )
+    (space OtherSpace
+      (dimension OtherDimension)
+    )
+  )
+
+  (objects
+      (class ObjectRoot
+        (attribute privilegeToDelete reliable timestamp)
+        (class RTIprivate)
+        (class Car
+          (attribute speed reliable timestamp TestSpace)
+          (attribute position reliable timestamp TestSpace)
+          (attribute bridgeSpeed reliable timestamp TestSpace)
+        )
+
+      )
+    )
+
+  (interactions
+      (class InteractionRoot reliable timestamp
+        (class RTIprivate reliable timestamp)
+        (class Finish reliable timestamp)
+        (class ChangeLights reliable timestamp TestSpace
+          (parameter west)
+          (parameter east)
+        )
+      )
+    )
+)
+

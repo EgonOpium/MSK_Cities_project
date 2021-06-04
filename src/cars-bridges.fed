@@ -2,7 +2,7 @@
 
 ;; TODO: Bridge class
 (FED
-  (Federation producer-consumer)
+  (Federation cars-bridges)
   (FEDversion v1.3)
   (spaces
     (space TestSpace

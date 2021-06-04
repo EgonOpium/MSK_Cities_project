@@ -28,57 +28,57 @@ public class CarFederate {
     protected String position;
 
     public void runFederate() throws RTIexception {
-//        rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
-//
-//        //TODO: Here I have to change path to FOM Model
-//        try
-//        {
-//            File fom = new File( "producer-consumer.fed" );
-//            rtiamb.createFederationExecution( "ExampleFederation",
-//                    fom.toURI().toURL() );
-//            log( "Created Federation" );
-//        }
-//        catch( FederationExecutionAlreadyExists exists )
-//        {
-//            log( "Didn't create federation, it already existed" );
-//        }
-//        catch(MalformedURLException urle )
-//        {
-//            log( "Exception processing fom: " + urle.getMessage() );
-//            urle.printStackTrace();
-//            return;
-//        }
-//
-//        // TODO: Still FOM Model needs to be changed
-//        fedamb = new CarAmbassador();
-//        rtiamb.joinFederationExecution( "ConsumerFederate", "ExampleFederation", fedamb );
-//        log( "Joined Federation as ProducerFederate");
-//
-//        rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
-//
-//        while( fedamb.isAnnounced == false )
-//        {
-//            rtiamb.tick();
-//        }
-//
-//        waitForUser();
-//
-//        rtiamb.synchronizationPointAchieved( READY_TO_RUN );
-//        log( "Achieved sync point: " +READY_TO_RUN+ ", waiting for federation..." );
-//        while( fedamb.isReadyToRun == false )
-//        {
-//            rtiamb.tick();
-//        }
-//
-//        enableTimePolicy();
-//
-//        publishAndSubscribe();
-//
-//        while (fedamb.running) {
-//            advanceTime(randomTime());
-//            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
-//            rtiamb.tick();
-//        }
+        rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+
+        //TODO: Here I have to change path to FOM Model
+        try
+        {
+            File fom = new File( "cars-bridges.fed" );
+            rtiamb.createFederationExecution( "ExampleFederation",
+                    fom.toURI().toURL() );
+            log( "Created Federation" );
+        }
+        catch( FederationExecutionAlreadyExists exists )
+        {
+            log( "Didn't create federation, it already existed" );
+        }
+        catch(MalformedURLException urle )
+        {
+            log( "Exception processing fom: " + urle.getMessage() );
+            urle.printStackTrace();
+            return;
+        }
+
+        // TODO: Still FOM Model needs to be changed
+        fedamb = new CarAmbassador();
+        rtiamb.joinFederationExecution( "ConsumerFederate", "ExampleFederation", fedamb );
+        log( "Joined Federation as ProducerFederate");
+
+        rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
+
+        while( fedamb.isAnnounced == false )
+        {
+            rtiamb.tick();
+        }
+
+        waitForUser();
+
+        rtiamb.synchronizationPointAchieved( READY_TO_RUN );
+        log( "Achieved sync point: " +READY_TO_RUN+ ", waiting for federation..." );
+        while( fedamb.isReadyToRun == false )
+        {
+            rtiamb.tick();
+        }
+
+        enableTimePolicy();
+
+        publishAndSubscribe();
+
+        while (fedamb.running) {
+            advanceTime(randomTime());
+            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
+            rtiamb.tick();
+        }
         log("You should not see this. - CarFederate run loop.");
     }
 

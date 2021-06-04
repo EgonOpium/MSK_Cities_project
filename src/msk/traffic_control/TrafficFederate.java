@@ -25,7 +25,7 @@ public class TrafficFederate {
         //TODO: Here I have to change path to FOM Model
         try
         {
-            File fom = new File( "producer-consumer.fed" );
+            File fom = new File( "cars-bridges.fed" );
             rtiamb.createFederationExecution( "ExampleFederation",
                     fom.toURI().toURL() );
             log( "Created Federation" );
@@ -43,8 +43,8 @@ public class TrafficFederate {
 
         // TODO: Still FOM Model needs to be changed
         fedamb = new TrafficAmbassador();
-        rtiamb.joinFederationExecution( "ConsumerFederate", "ExampleFederation", fedamb );
-        log( "Joined Federation as ProducerFederate");
+        rtiamb.joinFederationExecution( "TrafficFederate", "ExampleFederation", fedamb );
+        log( "Joined Federation as TrafficFederate");
 
         rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
 
@@ -65,12 +65,13 @@ public class TrafficFederate {
         enableTimePolicy();
 
         publishAndSubscribe();
-
-//        while (fedamb.running) {
-//            advanceTime(randomTime());
+        int counter = 0;
+        while (fedamb.running) {
+            advanceTime(randomTime());
 //            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
-//            rtiamb.tick();
-//        }
+
+            rtiamb.tick();
+        }
         log("You should not see this. - TrafficFederate run loop.");
     }
 
@@ -132,10 +133,13 @@ public class TrafficFederate {
     private void publishAndSubscribe() throws RTIexception {
         int lightsHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.ChangeLights" );
         fedamb.lightsHandle = lightsHandle;
-        rtiamb.subscribeInteractionClass( lightsHandle );
+        rtiamb.publishInteractionClass( lightsHandle );
 
-        int addProductHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.GetProduct" );
-        rtiamb.publishInteractionClass(addProductHandle);
+        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.SimulationStop");
+        fedamb.stopHandle = interactionHandle;
+        rtiamb.subscribeInteractionClass(interactionHandle);
+//        int addProductHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.GetProduct" );
+//        rtiamb.publishInteractionClass(addProductHandle);
     }
 
     private void advanceTime( double timestep ) throws RTIexception

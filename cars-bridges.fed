@@ -29,12 +29,14 @@
   (interactions
       (class InteractionRoot reliable timestamp
         (class RTIprivate reliable timestamp)
-        (class Finish reliable timestamp)
+        (class SimulationStop reliable timestamp
+            (parameter run)
+        )
         (class ChangeLights reliable timestamp TestSpace
           (parameter west)
           (parameter east)
         )
       )
-    )
+  )
 )
 

@@ -1,6 +1,8 @@
 package msk.traffic_control;
 
+import hla.rti.EventRetractionHandle;
 import hla.rti.LogicalTime;
+import hla.rti.ReceivedInteraction;
 import hla.rti.jlc.NullFederateAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 
@@ -17,7 +19,7 @@ public class TrafficAmbassador extends NullFederateAmbassador {
     protected boolean isReadyToRun       = false;
 
     protected boolean running 			 = true;
-
+    protected int stopHandle = 0;
     //-----------------------------------------------------------------
     //
     //              HERE IS THE PLACE FOR EXTERNAL VARIABLES
@@ -50,15 +52,15 @@ public class TrafficAmbassador extends NullFederateAmbassador {
     public void announceSynchronizationPoint( String label, byte[] tag )
     {
         log( "Synchronization point announced: " + label );
-//        if( label.equals(Example13Federate.READY_TO_RUN) )
-//            this.isAnnounced = true;
+        if( label.equals(TrafficFederate.READY_TO_RUN) )
+            this.isAnnounced = true;
     }
 
     public void federationSynchronized( String label )
     {
         log( "Federation Synchronized: " + label );
-//        if( label.equals(Example13Federate.READY_TO_RUN) )
-//            this.isReadyToRun = true;
+        if( label.equals(TrafficFederate.READY_TO_RUN) )
+            this.isReadyToRun = true;
     }
 
     /**
@@ -82,10 +84,36 @@ public class TrafficAmbassador extends NullFederateAmbassador {
         this.isAdvancing = false;
     }
 
+    public void simulationStop(){
+        this.running = false;
+    }
 
     //-----------------------------------------------------------------
     //
     //              HERE IS THE PLACE FOR EXTERNAL METHODS
     //
     //-----------------------------------------------------------------
+
+    public void receiveInteraction( int interactionClass,
+                                    ReceivedInteraction theInteraction,
+                                    byte[] tag )
+    {
+        // just pass it on to the other method for printing purposes
+        // passing null as the time will let the other method know it
+        // it from us, not from the RTI
+        receiveInteraction(interactionClass, theInteraction, tag, null, null);
+    }
+
+    public void receiveInteraction( int interactionClass,
+                                    ReceivedInteraction theInteraction,
+                                    byte[] tag,
+                                    LogicalTime theTime,
+                                    EventRetractionHandle eventRetractionHandle )
+    {
+        StringBuilder builder = new StringBuilder( "Interaction Received:" );
+        if(interactionClass == stopHandle){
+            simulationStop();
+            log( "TrafficAmbassador - Simulation stopped!" );
+        }
+    }
 }

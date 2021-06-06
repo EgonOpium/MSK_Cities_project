@@ -1,40 +1,30 @@
-package msk.car;
+package msk.bridge;
 
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
 import msk.HandlersHelper;
+
+import msk.car.CarAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
-
-
-import hla.rti.RTIambassador;
-import hla.rti.RTIexception;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.util.*;
+import java.util.Random;
 
-public class CarFederate {
+public class BridgeFederate {
     public static final String READY_TO_RUN = "ReadyToRun";
-
-
-
     private RTIambassador rtiamb;
-    private CarAmbassador fedamb;
-    private final double timeStep           = 10.0;
+    private BridgeAmbassador fedamb;
+    private final double timeStep           = 1.0;
 
-    private int ITERATIONS = 50;
-
-    private List<Car> carList;
-    private List<Car> carListToDelete;
 
     public void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
-        carList = new ArrayList<Car>();
-        carListToDelete = new ArrayList<Car>();
+
         //TODO: Here I have to change path to FOM Model
         try
         {
@@ -55,9 +45,9 @@ public class CarFederate {
         }
 
         // TODO: Still FOM Model needs to be changed
-        fedamb = new CarAmbassador();
-        rtiamb.joinFederationExecution( "CarFederate", "ExampleFederation", fedamb );
-        log( "Joined Federation as CarFederate");
+        fedamb = new BridgeAmbassador();
+        rtiamb.joinFederationExecution( "BridgeFederate", "ExampleFederation", fedamb );
+        log( "Joined Federation as BridgeFederate");
 
         rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
 
@@ -79,39 +69,14 @@ public class CarFederate {
 
         publishAndSubscribe();
 
+        log("Published and subscribed!");
 
-        for(int i=0;i<5;i++){
-            createCar();
-        }
-        Random rnd = new Random();
         while (fedamb.running) {
-            if(rnd.nextFloat() < 0.3){
-                createCar();
-            }
-            checkToDelete();
-            Collections.sort(carList);
-            if(carList.size() > 0){
-                advanceTime(carList.get(0).getNextUpdate());
-                log("Time propably advanced to: "+fedamb.federateTime);
-                for (Car car : carList)
-                {
-                    log("!!Car: "+car.getHandle()+ ", next update: " + car.getNextUpdate());
-                    if(fedamb.federateTime == car.getNextUpdate()){
-                        updateAttributeValues(car);
-                        log("Car: "+car.getHandle()+ ", attributes updated");
-                    }
-                    else{
-                        log("Car: "+car.getHandle()+ ", attributes not updated");
-                    }
-
-                }
-
-                rtiamb.tick();
-            }
-            else{
-                sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
-            }
+            advanceTime(randomTime());
+//            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
+            rtiamb.tick();
         }
+
     }
 
     private void waitForUser()
@@ -149,23 +114,45 @@ public class CarFederate {
         }
     }
 
-    private void updateAttributeValues( Car car ) throws RTIexception
+    private void updateAttributeValues( int objectHandle ) throws RTIexception
     {
-        SuppliedAttributes attributes =
-                RtiFactoryFactory.getRtiFactory().createSuppliedAttributes();
-
-        car.update(fedamb.federateTime, fedamb.lights_west, fedamb.lights_east);
-
-        byte[] positionValue = EncodingHelpers.encodeString(car.getPosition());
-
-        int classHandle = rtiamb.getObjectClass( car.getHandle() );
-
-        int positionHandle = rtiamb.getAttributeHandle( "position", classHandle );
-
-        attributes.add( positionHandle, positionValue );
-
-        LogicalTime time = convertTime( fedamb.federateTime + fedamb.federateLookahead );
-        rtiamb.updateAttributeValues( car.getHandle(), attributes, generateTag(), time );
+//        ///////////////////////////////////////////////
+//        // create the necessary container and values //
+//        ///////////////////////////////////////////////
+//        // create the collection to store the values in, as you can see
+//        // this is quite a lot of work
+//        SuppliedAttributes attributes =
+//                RtiFactoryFactory.getRtiFactory().createSuppliedAttributes();
+//        Random rnd = new Random();
+//        // generate the new values
+//        // we use EncodingHelpers to make things nice friendly for both Java and C++
+//        byte[] speedValue = EncodingHelpers.encodeInt(rnd.nextInt(5)+50 );
+//        // TODO: Position and bridge speed needs to be changed!
+//        byte[] positionValue = EncodingHelpers.encodeString( "ab:" + getLbts() );
+//        byte[] bridgeValue = EncodingHelpers.encodeString( "ac:" + getLbts() );
+//
+//        // get the handles
+//        // this line gets the object class of the instance identified by the
+//        // object instance the handle points to
+//        int classHandle = rtiamb.getObjectClass( objectHandle );
+//        int speedHandle = rtiamb.getAttributeHandle( "speed", classHandle );
+//        int positionHandle = rtiamb.getAttributeHandle( "position", classHandle );
+//        int bridgeSpeedHandle = rtiamb.getAttributeHandle( "bridgeSpeed", classHandle );
+//
+//        // put the values into the collection
+//        attributes.add( speedHandle, speedValue );
+//        attributes.add( positionHandle, positionValue );
+//        attributes.add( bridgeSpeedHandle, bridgeValue );
+//
+//        //////////////////////////
+//        // do the actual update //
+//        //////////////////////////
+//        rtiamb.updateAttributeValues( objectHandle,attributes, generateTag() );
+//
+//        // note that if you want to associate a particular timestamp with the
+//        // update. here we send another update, this time with a timestamp:
+//        LogicalTime time = convertTime( fedamb.federateTime + fedamb.federateLookahead );
+//        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
     }
 
     private void sendInteraction(double timeStep) throws RTIexception {
@@ -200,38 +187,37 @@ public class CarFederate {
     }
     // TODO: Important to change!
     private void publishAndSubscribe() throws RTIexception {
-        int carHandle   = rtiamb.getObjectClassHandle( "ObjectRoot.Car" );
-        int speedHandle = rtiamb.getAttributeHandle("speed", carHandle);
-        int bridgeSpeedHandle = rtiamb.getAttributeHandle("bridgeSpeed", carHandle);
-        int positionHandle = rtiamb.getAttributeHandle("position", carHandle);
+//        int carHandle   = rtiamb.getObjectClassHandle( "ObjectRoot.Car" );
+//        int speedHandle = rtiamb.getAttributeHandle("speed", carHandle);
+//        int bridgeSpeedHandle = rtiamb.getAttributeHandle("bridgeSpeed", carHandle);
+//        int positionHandle = rtiamb.getAttributeHandle("position", carHandle);
+//
+//        AttributeHandleSet attributes =
+//                RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
+//        attributes.add( speedHandle );
+//        attributes.add( bridgeSpeedHandle );
+//        attributes.add( positionHandle );
+//
+//        rtiamb.publishObjectClass(carHandle, attributes);
+//
+//        int lightsHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.ChangeLights" );
+//        HandlersHelper.addInteractionClassHandler("InteractionRoot.ChangeLights", lightsHandle);
+//        rtiamb.subscribeInteractionClass( lightsHandle );
+//
+//        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
+//        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
+//        rtiamb.publishInteractionClass(stopHandle);
+//        rtiamb.subscribeInteractionClass(stopHandle);
 
-        AttributeHandleSet attributes =
-                RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
-        attributes.add( speedHandle );
-        attributes.add( bridgeSpeedHandle );
-        attributes.add( positionHandle );
-
-        rtiamb.publishObjectClass(carHandle, attributes);
-
-        int lightsHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.ChangeLights" );
-        HandlersHelper.addInteractionClassHandler("InteractionRoot.ChangeLights", lightsHandle);
-        rtiamb.subscribeInteractionClass( lightsHandle );
-
-        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
-        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
-        rtiamb.publishInteractionClass(stopHandle);
-        rtiamb.subscribeInteractionClass(stopHandle);
-
-        log("Published and subscribed!");
+        log("Published and subscribed stop!");
     }
 
     private void advanceTime( double timestep ) throws RTIexception
     {
-        log("requesting time advance for: " + timestep + ", current simtime: "+fedamb.federateTime);
+        log("requesting time advance for: " + timestep);
         // request the advance
         fedamb.isAdvancing = true;
-        //LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
-        LogicalTime newTime = convertTime(timestep);
+        LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
         rtiamb.timeAdvanceRequest( newTime );
         while( fedamb.isAdvancing )
         {
@@ -239,39 +225,7 @@ public class CarFederate {
         }
     }
 
-    private void checkToDelete() throws RTIexception{
-        for (Car car : carList)
-        {
-            if(car.getPosition() == "END"){
-                carListToDelete.add(car);
-            }
-        }
-        for(Car car : carListToDelete){
-//            carList.remove(car);
-            deleteObject(car);
-        }
-        carListToDelete.clear();
-    }
 
-    private void createCar() throws RTIexception
-    {
-        int objectHandle = registerObject();
-        log("Object Car created with handle: "+objectHandle);
-        carList.add(new Car(objectHandle, fedamb.federateTime));
-    }
-
-    private int registerObject() throws RTIexception
-    {
-        int classHandle = rtiamb.getObjectClassHandle( "ObjectRoot.Car" );
-        return rtiamb.registerObjectInstance( classHandle );
-    }
-
-    private void deleteObject(Car car) throws RTIexception
-    {
-        carList.remove(car);
-        rtiamb.deleteObjectInstance(car.getHandle(), generateTag());
-        log("Object with handle: "+car.getHandle() +" has been deleted!");
-    }
 
     private double randomTime() {
         Random r = new Random();
@@ -307,10 +261,10 @@ public class CarFederate {
 
     public static void main(String[] args) {
         try {
-            new CarFederate().runFederate();
+            new BridgeFederate().runFederate();
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }
     }
-       
+
 }

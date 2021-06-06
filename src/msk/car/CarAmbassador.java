@@ -6,6 +6,7 @@ import hla.rti.LogicalTime;
 import hla.rti.ReceivedInteraction;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.NullFederateAmbassador;
+import msk.HandlersHelper;
 import org.portico.impl.hla13.types.DoubleTime;
 
 
@@ -22,7 +23,7 @@ public class CarAmbassador extends NullFederateAmbassador {
     protected boolean isReadyToRun       = false;
 
     protected boolean running 			 = true;
-    protected int stopHandle = 0;
+
 
 
     //-----------------------------------------------------------------
@@ -31,7 +32,8 @@ public class CarAmbassador extends NullFederateAmbassador {
     //
     //-----------------------------------------------------------------
 
-    protected int lightsHandle = 0;
+    protected boolean lights_west = false;
+    protected boolean lights_east = false;
 
     private double convertTime( LogicalTime logicalTime )
     {
@@ -41,7 +43,7 @@ public class CarAmbassador extends NullFederateAmbassador {
 
     private void log( String message )
     {
-        System.out.println( "FederateAmbassador: " + message );
+        System.out.println( "CarFederateAmbassador: " + message );
     }
 
     public void synchronizationPointRegistrationFailed( String label )
@@ -89,9 +91,6 @@ public class CarAmbassador extends NullFederateAmbassador {
         this.isAdvancing = false;
     }
 
-    public void simulationStop(){
-        this.running = false;
-    }
     //-----------------------------------------------------------------
     //
     //              HERE IS THE PLACE FOR EXTERNAL METHODS
@@ -109,15 +108,24 @@ public class CarAmbassador extends NullFederateAmbassador {
     }
 
     public void receiveInteraction( int interactionClass,
-                                    ReceivedInteraction theInteraction,
-                                    byte[] tag,
+                                    ReceivedInteraction theInteraction, byte[] tag,
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
         StringBuilder builder = new StringBuilder( "Interaction Received:" );
-        if(interactionClass == stopHandle){
-            simulationStop();
-            log( "TrafficAmbassador - Simulation stopped!" );
+
+        if(interactionClass == HandlersHelper
+                .getInteractionHandleByName("InteractionRoot.Finish")){
+            this.running = false;
+            log( "Simulation stopped!" );
+        }
+        else if(interactionClass == HandlersHelper
+                .getInteractionHandleByName("InteractionRoot.ChangeLights")){
+            try {
+                this.lights_west = EncodingHelpers.decodeBoolean(theInteraction.getValue(0));
+                this.lights_east = EncodingHelpers.decodeBoolean(theInteraction.getValue(1));
+            } catch (ArrayIndexOutOfBounds ignored) {
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ package msk.traffic_control;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
+import msk.HandlersHelper;
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
 
@@ -18,6 +19,10 @@ public class TrafficFederate {
     private RTIambassador rtiamb;
     private TrafficAmbassador fedamb;
     private final double timeStep           = 10.0;
+
+    boolean lights_west = false;
+    boolean lights_east = false;
+    boolean lastLight = false;
 
     public void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
@@ -65,14 +70,30 @@ public class TrafficFederate {
         enableTimePolicy();
 
         publishAndSubscribe();
-        int counter = 0;
+
         while (fedamb.running) {
             advanceTime(randomTime());
-//            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
+            changeLights();
+            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
 
             rtiamb.tick();
         }
-        log("You should not see this. - TrafficFederate run loop.");
+
+    }
+
+    private void changeLights(){
+        if((!lights_west && !lights_east) && !lastLight){
+            lastLight = true;
+            lights_west = true;
+        }
+        else if((!lights_west && !lights_east) && lastLight){
+            lastLight = false;
+            lights_east = true;
+        }
+        else if((lights_west && !lights_east) || (!lights_west && lights_east)){
+            lights_west = false;
+            lights_east = false;
+        }
     }
 
     private void waitForUser()
@@ -113,21 +134,21 @@ public class TrafficFederate {
     private void sendInteraction(double timeStep) throws RTIexception {
         SuppliedParameters parameters =
                 RtiFactoryFactory.getRtiFactory().createSuppliedParameters();
-        Random random = new Random();
-        int quantityInt = random.nextInt(10) + 1;
-        byte[] quantity = EncodingHelpers.encodeInt(quantityInt);
 
-        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.GetProduct");
-        int quantityHandle = rtiamb.getParameterHandle( "quantity", interactionHandle );
+        byte[] west = EncodingHelpers.encodeBoolean(lights_west);
+        byte[] east = EncodingHelpers.encodeBoolean(lights_east);
 
-        parameters.add(quantityHandle, quantity);
+        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.ChangeLights");
+        int westHandle = rtiamb.getParameterHandle( "west", interactionHandle );
+        int eastHandle = rtiamb.getParameterHandle( "east", interactionHandle );
+
+        parameters.add(westHandle, west);
+        parameters.add(eastHandle, east);
 
         LogicalTime time = convertTime( timeStep );
-        log("Sending GetProduct: " + quantityInt);
         // TSO
         rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
-//        // RO
-//        rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes() );
+
     }
     // TODO: Important to change!
     private void publishAndSubscribe() throws RTIexception {
@@ -135,9 +156,11 @@ public class TrafficFederate {
         fedamb.lightsHandle = lightsHandle;
         rtiamb.publishInteractionClass( lightsHandle );
 
-        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.SimulationStop");
-        fedamb.stopHandle = interactionHandle;
-        rtiamb.subscribeInteractionClass(interactionHandle);
+        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
+
+        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
+
+        rtiamb.subscribeInteractionClass(stopHandle);
 //        int addProductHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.GetProduct" );
 //        rtiamb.publishInteractionClass(addProductHandle);
     }

@@ -1,4 +1,4 @@
-package msk.traffic_control;
+package msk.bridge;
 
 import hla.rti.EventRetractionHandle;
 import hla.rti.LogicalTime;
@@ -8,8 +8,7 @@ import msk.HandlersHelper;
 import msk.car.CarFederate;
 import org.portico.impl.hla13.types.DoubleTime;
 
-public class TrafficAmbassador extends NullFederateAmbassador {
-
+public class BridgeAmbassador extends NullFederateAmbassador {
     protected double federateTime        = 0.0;
     protected double federateLookahead   = 1.0;
 
@@ -27,8 +26,6 @@ public class TrafficAmbassador extends NullFederateAmbassador {
     //              HERE IS THE PLACE FOR EXTERNAL VARIABLES
     //
     //-----------------------------------------------------------------
-
-    protected int lightsHandle = 0;
 
     private double convertTime( LogicalTime logicalTime )
     {

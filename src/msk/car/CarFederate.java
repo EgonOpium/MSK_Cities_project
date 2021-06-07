@@ -26,6 +26,8 @@ public class CarFederate {
     private List<Car> carList;
     private List<Car> carListToDelete;
 
+    double lastUpdate;
+
     public void runFederate() throws RTIexception {
         {
             rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
@@ -87,7 +89,9 @@ public class CarFederate {
             checkToDelete();
             Collections.sort(carList);
             if(carList.size() > 0){
+                lastUpdate = carList.get(0).getNextUpdate();
                 advanceTime(carList.get(0).getNextUpdate());
+
                 log("Time advanced to: "+fedamb.federateTime);
                 for (Car car : carList)
                 {
@@ -100,8 +104,13 @@ public class CarFederate {
                 rtiamb.tick();
             }
             else{
-                sendStopInteraction(fedamb.federateTime + fedamb.federateLookahead);
-
+                if(fedamb.federateTime == lastUpdate){
+                    advanceTime(lastUpdate + 10);
+                    sendStopInteraction(fedamb.federateTime + fedamb.federateLookahead);
+                }
+                else{
+                    log("Guess what now... :(");
+                }
             }
         }
         rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
@@ -162,12 +171,15 @@ public class CarFederate {
         car.update(fedamb.federateTime, fedamb.lights_west, fedamb.lights_east);
 
         byte[] positionValue = EncodingHelpers.encodeString(car.getPosition());
+        byte[] directionValue = EncodingHelpers.encodeString(car.getDirection());
 
         int classHandle = rtiamb.getObjectClass( car.getHandle() );
 
         int positionHandle = rtiamb.getAttributeHandle( "position", classHandle );
+        int directionHandle = rtiamb.getAttributeHandle("direction", classHandle);
 
         attributes.add( positionHandle, positionValue );
+        attributes.add( directionHandle, directionValue );
 
         LogicalTime time = convertTime( fedamb.federateTime + fedamb.federateLookahead );
         rtiamb.updateAttributeValues( car.getHandle(), attributes, generateTag(), time );
@@ -189,15 +201,18 @@ public class CarFederate {
 
     private void publishAndSubscribe() throws RTIexception {
         int carHandle   = rtiamb.getObjectClassHandle( "ObjectRoot.Car" );
+        int positionHandle = rtiamb.getAttributeHandle("position", carHandle);
+        int directionHandle = rtiamb.getAttributeHandle("direction", carHandle);
         int speedHandle = rtiamb.getAttributeHandle("speed", carHandle);
         int bridgeSpeedHandle = rtiamb.getAttributeHandle("bridgeSpeed", carHandle);
-        int positionHandle = rtiamb.getAttributeHandle("position", carHandle);
+
 
         AttributeHandleSet attributes =
                 RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
+        attributes.add( positionHandle );
+        attributes.add( directionHandle );
         attributes.add( speedHandle );
         attributes.add( bridgeSpeedHandle );
-        attributes.add( positionHandle );
 
         rtiamb.publishObjectClass(carHandle, attributes);
 

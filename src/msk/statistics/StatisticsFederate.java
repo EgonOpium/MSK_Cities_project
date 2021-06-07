@@ -69,6 +69,18 @@ public class StatisticsFederate {
             advanceTime(1.0);
             rtiamb.tick();
         }
+        for(CarStatistic car : fedamb.carListFinished){
+            log("Car handle: "+car.theObject
+                    +", \n Direction: "+car.getDirection()
+                    +", \n Time of creation: "+car.getCreationTime()
+                    +", \n Time to bridge: "+car.getTimeToBridge()
+                    +", \n Time on bridge: "+car.getTimeOnBridge()
+                    +", \n Time after bridge: "+car.getTimeAfterBridge()
+                    +", \n Time of finishing: "+car.getFinishTime()
+                    +", \n Time of journey: "+(car.getFinishTime() - car.getCreationTime()));
+        }
+
+        log("Time check before finish: "+fedamb.federateTime);
 
         rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
         log( "Resigned from Federation" );
@@ -115,11 +127,13 @@ public class StatisticsFederate {
 
     private void publishAndSubscribe() throws RTIexception {
         int simObjectClassHandle = rtiamb.getObjectClassHandle("ObjectRoot.Car");
-        int speedHandle = rtiamb.getAttributeHandle("speed", simObjectClassHandle);
+        int speedHandle = rtiamb.getAttributeHandle("position", simObjectClassHandle);
+        int directionHandle = rtiamb.getAttributeHandle("direction", simObjectClassHandle);
 
         AttributeHandleSet attributes = RtiFactoryFactory.getRtiFactory()
                 .createAttributeHandleSet();
         attributes.add(speedHandle);
+        attributes.add(directionHandle);
         rtiamb.subscribeObjectClassAttributes(simObjectClassHandle, attributes);
 
 

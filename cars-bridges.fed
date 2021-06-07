@@ -18,8 +18,9 @@
         (attribute privilegeToDelete reliable timestamp)
         (class RTIprivate)
         (class Car
-          (attribute speed reliable timestamp TestSpace)
           (attribute position reliable timestamp TestSpace)
+          (attribute direction reliable timestamp TestSpace)
+          (attribute speed reliable timestamp TestSpace)
           (attribute bridgeSpeed reliable timestamp TestSpace)
         )
       )

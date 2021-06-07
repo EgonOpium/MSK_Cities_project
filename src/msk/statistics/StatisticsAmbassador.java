@@ -7,6 +7,10 @@ import msk.HandlersHelper;
 import msk.car.CarFederate;
 import org.portico.impl.hla13.types.DoubleTime;
 
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+
 public class StatisticsAmbassador extends NullFederateAmbassador {
 
     protected boolean running = true;
@@ -20,6 +24,8 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
     protected boolean isAnnounced        = false;
     protected boolean isReadyToRun       = false;
 
+    ArrayList<CarStatistic> carList = new ArrayList<CarStatistic>();
+    ArrayList<CarStatistic> carListFinished = new ArrayList<CarStatistic>();
 
     public void timeRegulationEnabled( LogicalTime theFederateTime )
     {
@@ -92,44 +98,90 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
 
     public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
         System.out.println("Pojawil sie nowy obiekt typu " + objectName);
+//        HandlersHelper.addObjectClassHandler(theObject, theObjectClass );
+        carList.add(new CarStatistic(theObject, federateTime));
+    }
+
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag) throws ObjectNotKnown, FederateInternalError {
+        try {
+            removeObjectInstance(theObject, userSuppliedTag, null, null);
+        } catch (InvalidFederationTime invalidFederationTime) {
+            invalidFederationTime.printStackTrace();
+        }
+    }
+
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag, LogicalTime theTime, EventRetractionHandle retractionHandle) throws ObjectNotKnown, InvalidFederationTime, FederateInternalError {
+        for(CarStatistic car : carList){
+            if(car.theObject == theObject){
+                carListFinished.add(car);
+            }
+        }
     }
 
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag) {
         reflectAttributeValues(theObject, theAttributes, tag, null, null);
     }
-
+    // position posibilities - TO_BRIDGE, ON_BRIDGE, AFTER_BRIDGE, IN_QUEUE
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
                                        EventRetractionHandle retractionHandle) {
-        log("Reflected attributes...");
-        StringBuilder builder = new StringBuilder("Reflection for object:");
+        for(CarStatistic car : carList){
+            if (car.theObject == theObject){
 
-        builder.append(" handle=" + theObject);
-//		builder.append(", tag=" + EncodingHelpers.decodeString(tag));
+                try {
+                    String status = EncodingHelpers.decodeString(theAttributes.getValue(0));
+                    String direction = EncodingHelpers.decodeString(theAttributes.getValue(1));
+                    car.setDirection(direction);
+                    if(Objects.equals(status, new String("ON_BRIDGE"))){
+                        car.setTimeToBridge(federateTime);
+                    }
+                    else if(Objects.equals(status, new String("AFTER_BRIDGE"))){
+                        car.setTimeOnBridge(federateTime);
 
-        // print the attribute information
-        builder.append(", attributeCount=" + theAttributes.size());
-        builder.append("\n");
-        for (int i = 0; i < theAttributes.size(); i++) {
-            try {
-                // print the attibute handle
-                builder.append("\tattributeHandle=");
-                builder.append(theAttributes.getAttributeHandle(i));
-                // print the attribute value
-                builder.append(", attributeValue=");
-                builder.append(EncodingHelpers.decodeInt(theAttributes
-                        .getValue(i)));
-                builder.append(", time=");
-                builder.append(theTime);
-                builder.append("\n");
-            } catch (ArrayIndexOutOfBounds aioob) {
-                // won't happen
-                log("Won't happen");
+                    }
+                    else if(Objects.equals(status, new String("END"))){
+                        car.setTimeAfterBridge(federateTime);
+                        car.setFinishTime(federateTime);
+                    }
+                    else{
+                        log("Car: "+theObject+", status: "+status);
+                    }
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
             }
         }
+//        log("Reflected attributes...");
+//        StringBuilder builder = new StringBuilder("Reflection for object:");
+//
+//        builder.append(" handle=" + theObject);
+////		builder.append(", tag=" + EncodingHelpers.decodeString(tag));
+//
+//        // print the attribute information
+//        builder.append(", attributeCount=" + theAttributes.size());
+//        builder.append("\n");
+//
+//        for (int i = 1; i < theAttributes.size(); i++) {
+//            try {
+//                // print the attibute handle
+//                builder.append("\tattributeHandle=");
+//                builder.append(theAttributes.getAttributeHandle(i));
+//                // print the attribute value
+//                builder.append(", attributeValue=");
+//                builder.append(EncodingHelpers.decodeString(theAttributes
+//                        .getValue(i)));
+//                builder.append(", time=");
+//                builder.append(theTime);
+//                builder.append("\n");
+//            } catch (ArrayIndexOutOfBounds aioob) {
+//                // won't happen
+//                log("Won't happen");
+//            }
+//        }
+//        log(builder.toString());
 
-        log(builder.toString());
+
     }
 
 

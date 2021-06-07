@@ -120,6 +120,11 @@ public class Car implements Comparable<Car>{
             log("Update with no changes!");
         }
     }
+
+    public String getDirection() {
+        return direction;
+    }
+
     public void log(String message)
     {
         System.out.println( "CarObject   : Handle: " + this.getHandle()+ ", " + message );

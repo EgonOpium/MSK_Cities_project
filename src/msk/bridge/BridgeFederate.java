@@ -77,6 +77,23 @@ public class BridgeFederate {
             rtiamb.tick();
         }
 
+        rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
+        log( "Resigned from Federation" );
+
+        try
+        {
+            rtiamb.destroyFederationExecution( "ExampleFederation" );
+            log( "Destroyed Federation" );
+        }
+        catch( FederationExecutionDoesNotExist dne )
+        {
+            log( "No need to destroy federation, it doesn't exist" );
+        }
+        catch( FederatesCurrentlyJoined fcj )
+        {
+            log( "Didn't destroy federation, federates still joined" );
+        }
+
     }
 
     private void waitForUser()
@@ -113,103 +130,22 @@ public class BridgeFederate {
             rtiamb.tick();
         }
     }
-
+    // TODO: Important to change!
     private void updateAttributeValues( int objectHandle ) throws RTIexception
     {
-//        ///////////////////////////////////////////////
-//        // create the necessary container and values //
-//        ///////////////////////////////////////////////
-//        // create the collection to store the values in, as you can see
-//        // this is quite a lot of work
-//        SuppliedAttributes attributes =
-//                RtiFactoryFactory.getRtiFactory().createSuppliedAttributes();
-//        Random rnd = new Random();
-//        // generate the new values
-//        // we use EncodingHelpers to make things nice friendly for both Java and C++
-//        byte[] speedValue = EncodingHelpers.encodeInt(rnd.nextInt(5)+50 );
-//        // TODO: Position and bridge speed needs to be changed!
-//        byte[] positionValue = EncodingHelpers.encodeString( "ab:" + getLbts() );
-//        byte[] bridgeValue = EncodingHelpers.encodeString( "ac:" + getLbts() );
-//
-//        // get the handles
-//        // this line gets the object class of the instance identified by the
-//        // object instance the handle points to
-//        int classHandle = rtiamb.getObjectClass( objectHandle );
-//        int speedHandle = rtiamb.getAttributeHandle( "speed", classHandle );
-//        int positionHandle = rtiamb.getAttributeHandle( "position", classHandle );
-//        int bridgeSpeedHandle = rtiamb.getAttributeHandle( "bridgeSpeed", classHandle );
-//
-//        // put the values into the collection
-//        attributes.add( speedHandle, speedValue );
-//        attributes.add( positionHandle, positionValue );
-//        attributes.add( bridgeSpeedHandle, bridgeValue );
-//
-//        //////////////////////////
-//        // do the actual update //
-//        //////////////////////////
-//        rtiamb.updateAttributeValues( objectHandle,attributes, generateTag() );
-//
-//        // note that if you want to associate a particular timestamp with the
-//        // update. here we send another update, this time with a timestamp:
-//        LogicalTime time = convertTime( fedamb.federateTime + fedamb.federateLookahead );
-//        rtiamb.updateAttributeValues( objectHandle, attributes, generateTag(), time );
+
     }
-
+    // TODO: Important to change!
     private void sendInteraction(double timeStep) throws RTIexception {
-        SuppliedParameters parameters =
-                RtiFactoryFactory.getRtiFactory().createSuppliedParameters();
-//        Random random = new Random();
-//        int speedInt = random.nextInt(20) + 1;
-//        byte[] speed = EncodingHelpers.encodeInt(speedInt);
-//        byte[] stop = EncodingHelpers.encodeString("Stop");
 
-//
-        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
-//        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Car");
-//        int objectHandle = rtiamb.getObjectClassHandle("ObjectRoot.Car");
-//        int speedHandle = rtiamb.getParameterHandle( "speed", objectHandle );
-//
-//        int stopHandle = rtiamb.getParameterHandle("run", interactionHandle);
-//        parameters.add(stopHandle, stop);
-//
-//        log("");
-        LogicalTime time = convertTime( timeStep );
-//        log("Sending actual speed: " + speedInt);
-//        // TSO
-//        rtiamb.obje
-
-        rtiamb.sendInteraction(interactionHandle, parameters,"tag".getBytes(), time );
-        fedamb.running = false;
-        log("Car - Stop sended!");
-//        rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
-//        // RO
-//        rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes() );
     }
     // TODO: Important to change!
     private void publishAndSubscribe() throws RTIexception {
-//        int carHandle   = rtiamb.getObjectClassHandle( "ObjectRoot.Car" );
-//        int speedHandle = rtiamb.getAttributeHandle("speed", carHandle);
-//        int bridgeSpeedHandle = rtiamb.getAttributeHandle("bridgeSpeed", carHandle);
-//        int positionHandle = rtiamb.getAttributeHandle("position", carHandle);
-//
-//        AttributeHandleSet attributes =
-//                RtiFactoryFactory.getRtiFactory().createAttributeHandleSet();
-//        attributes.add( speedHandle );
-//        attributes.add( bridgeSpeedHandle );
-//        attributes.add( positionHandle );
-//
-//        rtiamb.publishObjectClass(carHandle, attributes);
-//
-//        int lightsHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.ChangeLights" );
-//        HandlersHelper.addInteractionClassHandler("InteractionRoot.ChangeLights", lightsHandle);
-//        rtiamb.subscribeInteractionClass( lightsHandle );
-//
-//        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
-//        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
-//        rtiamb.publishInteractionClass(stopHandle);
-//        rtiamb.subscribeInteractionClass(stopHandle);
 
-        log("Published and subscribed stop!");
+//
+        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
+        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
+        rtiamb.subscribeInteractionClass(stopHandle);
     }
 
     private void advanceTime( double timestep ) throws RTIexception
@@ -224,9 +160,7 @@ public class BridgeFederate {
             rtiamb.tick();
         }
     }
-
-
-
+    // TODO: Important to change!
     private double randomTime() {
         Random r = new Random();
         return 1 +(4 * r.nextDouble());

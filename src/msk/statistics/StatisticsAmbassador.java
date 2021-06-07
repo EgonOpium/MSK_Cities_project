@@ -68,16 +68,10 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
     public void receiveInteraction(int interactionClass,
                                    ReceivedInteraction theInteraction, byte[] tag,
                                    LogicalTime theTime, EventRetractionHandle eventRetractionHandle) {
-        StringBuilder builder = new StringBuilder("Interaction Received: ");
-
         if (interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")) {
-            builder.append("Odebrano interakcję kończącą.");
             running = false;
-            log( "Simulation stopped!" );
         }
-
-        log(builder.toString());
     }
 
     public void timeAdvanceGrant( LogicalTime theTime )
@@ -96,6 +90,10 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
         System.out.println("StatisticsAmbassador: " + message);
     }
 
+    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
+        System.out.println("Pojawil sie nowy obiekt typu " + objectName);
+    }
+
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag) {
         reflectAttributeValues(theObject, theAttributes, tag, null, null);
@@ -104,6 +102,7 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
                                        EventRetractionHandle retractionHandle) {
+        log("Reflected attributes...");
         StringBuilder builder = new StringBuilder("Reflection for object:");
 
         builder.append(" handle=" + theObject);
@@ -126,14 +125,12 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
                 builder.append("\n");
             } catch (ArrayIndexOutOfBounds aioob) {
                 // won't happen
+                log("Won't happen");
             }
         }
 
         log(builder.toString());
     }
 
-    @Override
-    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) throws CouldNotDiscover, ObjectClassNotKnown, FederateInternalError {
-        System.out.println("Pojawil sie nowy obiekt typu SimObject");
-    }
+
 }

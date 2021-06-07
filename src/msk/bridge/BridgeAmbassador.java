@@ -104,12 +104,9 @@ public class BridgeAmbassador extends NullFederateAmbassador {
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        StringBuilder builder = new StringBuilder( "Interaction Received:" );
-
         if(interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")){
             this.running = false;
-            log( "Simulation stopped!" );
         }
     }
 }

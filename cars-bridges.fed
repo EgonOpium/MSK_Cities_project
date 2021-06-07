@@ -22,7 +22,6 @@
           (attribute position reliable timestamp TestSpace)
           (attribute bridgeSpeed reliable timestamp TestSpace)
         )
-
       )
     )
 

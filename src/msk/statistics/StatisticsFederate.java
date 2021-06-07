@@ -88,8 +88,7 @@ public class StatisticsFederate {
         }
     }
 
-    private void waitForUser()
-    {
+    private void waitForUser() {
         log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
         try
@@ -103,8 +102,7 @@ public class StatisticsFederate {
         }
     }
 
-    private void advanceTime( double timestep ) throws RTIexception
-    {
+    private void advanceTime( double timestep ) throws RTIexception {
         // request the advance
         fedamb.isAdvancing = true;
         LogicalTime newTime = convertTime( fedamb.federateTime + timestep );
@@ -119,30 +117,18 @@ public class StatisticsFederate {
         int simObjectClassHandle = rtiamb.getObjectClassHandle("ObjectRoot.Car");
         int speedHandle = rtiamb.getAttributeHandle("speed", simObjectClassHandle);
 
-
-
-//        int simObjectClassHandle = rtiamb
-//                .getObjectClassHandle("ObjectRoot.Storage");
-//        int stateHandle = rtiamb.getAttributeHandle("stock", simObjectClassHandle);
-//
         AttributeHandleSet attributes = RtiFactoryFactory.getRtiFactory()
                 .createAttributeHandleSet();
         attributes.add(speedHandle);
-//
         rtiamb.subscribeObjectClassAttributes(simObjectClassHandle, attributes);
-//
-        // Zapisanie do inteakcji ko�cz�cej
-        int interactionHandle = rtiamb
-                .getInteractionClassHandle("InteractionRoot.Finish");
-        // Mapowania interakcji na uchwyt
-        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish",
-                interactionHandle);
 
-        rtiamb.subscribeInteractionClass(interactionHandle);
+
+        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
+        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
+        rtiamb.subscribeInteractionClass(stopHandle);
     }
 
-    private void enableTimePolicy() throws RTIexception
-    {
+    private void enableTimePolicy() throws RTIexception {
         // NOTE: Unfortunately, the LogicalTime/LogicalTimeInterval create code is
         //       Portico specific. You will have to alter this if you move to a
         //       different RTI implementation. As such, we've isolated it into a
@@ -173,21 +159,15 @@ public class StatisticsFederate {
         }
     }
 
-    private LogicalTime convertTime( double time )
-    {
+    private LogicalTime convertTime( double time ) {
         // PORTICO SPECIFIC!!
         return new DoubleTime( time );
     }
 
-    /**
-     * Same as for {@link #convertTime(double)}
-     */
-    private LogicalTimeInterval convertInterval( double time )
-    {
+    private LogicalTimeInterval convertInterval( double time ) {
         // PORTICO SPECIFIC!!
         return new DoubleTimeInterval( time );
     }
-
 
     private void log( String message )
     {

@@ -78,6 +78,22 @@ public class TrafficFederate {
 
             rtiamb.tick();
         }
+        rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
+        log( "Resigned from Federation" );
+
+        try
+        {
+            rtiamb.destroyFederationExecution( "ExampleFederation" );
+            log( "Destroyed Federation" );
+        }
+        catch( FederationExecutionDoesNotExist dne )
+        {
+            log( "No need to destroy federation, it doesn't exist" );
+        }
+        catch( FederatesCurrentlyJoined fcj )
+        {
+            log( "Didn't destroy federation, federates still joined" );
+        }
 
     }
 
@@ -152,17 +168,14 @@ public class TrafficFederate {
     }
     // TODO: Important to change!
     private void publishAndSubscribe() throws RTIexception {
+        // Change lights interaction
         int lightsHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.ChangeLights" );
         fedamb.lightsHandle = lightsHandle;
         rtiamb.publishInteractionClass( lightsHandle );
-
+        // Stop simulation interaction
         int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
-
         HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
-
         rtiamb.subscribeInteractionClass(stopHandle);
-//        int addProductHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.GetProduct" );
-//        rtiamb.publishInteractionClass(addProductHandle);
     }
 
     private void advanceTime( double timestep ) throws RTIexception

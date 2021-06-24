@@ -1,10 +1,12 @@
 package msk.template;
 
 import hla.rti.LogicalTime;
+import hla.rti.RTIambassador;
 import hla.rti.jlc.NullFederateAmbassador;
+import msk.gui.GuiAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 
-public class TemplateAmbassador extends NullFederateAmbassador {
+public abstract class TemplateAmbassador extends NullFederateAmbassador {
     protected double federateTime        = 0.0;
     protected double federateLookahead   = 1.0;
 
@@ -17,19 +19,25 @@ public class TemplateAmbassador extends NullFederateAmbassador {
 
     protected boolean running 			 = true;
 
+    protected final TemplateFederate templateFederate;
+
     //-----------------------------------------------------------------
     //
     //              HERE IS THE PLACE FOR EXTERNAL VARIABLES
     //
     //-----------------------------------------------------------------
 
-    private double convertTime( LogicalTime logicalTime )
+    public TemplateAmbassador(TemplateFederate templateFederate) {
+        this.templateFederate = templateFederate;
+    }
+
+    protected double convertTime(LogicalTime logicalTime )
     {
         // PORTICO SPECIFIC!!
         return ((DoubleTime)logicalTime).getTime();
     }
 
-    private void log( String message )
+    protected void log( String message )
     {
         System.out.println( "FederateAmbassador: " + message );
     }
@@ -47,15 +55,15 @@ public class TemplateAmbassador extends NullFederateAmbassador {
     public void announceSynchronizationPoint( String label, byte[] tag )
     {
         log( "Synchronization point announced: " + label );
-//        if( label.equals(Example13Federate.READY_TO_RUN) )
-//            this.isAnnounced = true;
+        if( label.equals(TemplateFederate.READY_TO_RUN) )
+            this.isAnnounced = true;
     }
 
     public void federationSynchronized( String label )
     {
         log( "Federation Synchronized: " + label );
-//        if( label.equals(Example13Federate.READY_TO_RUN) )
-//            this.isReadyToRun = true;
+        if( label.equals(TemplateFederate.READY_TO_RUN) )
+            this.isReadyToRun = true;
     }
 
     /**

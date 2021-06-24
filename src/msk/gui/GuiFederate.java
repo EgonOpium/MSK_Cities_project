@@ -1,35 +1,56 @@
 package msk.gui;
-
-// TODO: Not started yet... : (
-
 import hla.rti.RTIexception;
-import msk.car.CarFederate;
+import hla.rti.*;
+import hla.rti.jlc.RtiFactoryFactory;
+import msk.template.TemplateAmbassador;
+import msk.template.TemplateFederate;
 
 import java.util.Random;
 
-public class GuiFederate {
-    public void runFederate() throws RTIexception {
-        Random rnd = new Random();
+public class GuiFederate extends TemplateFederate {
 
-        for(int i=0;i<10;i++){
-            rnd.nextFloat();
-            log("New float: "+rnd.nextFloat());
-        }
+    private String federateName;
+    public GuiFederate() throws RTIexception {
+        super("GuiFederate");
+    }
+
+
+    @Override
+    protected void createRTIAmbassador() throws RTIexception{
+        this.rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+    }
+
+    @Override
+    protected void createAmbassador() {
+        this.fedamb = new GuiAmbassador(this);
+    }
+
+    @Override
+    protected void mainMethod() throws RTIexception {
+        advanceTime(randomTime());
+    }
+
+
+    @Override
+    public void sendInteraction(double timeStep) throws RTIexception{
 
     }
 
-    public void log(String message)
-    {
-        System.out.println( "GuiFederate   : " + message );
+    @Override
+    public void publishAndSubscribe() throws RTIexception{
+
     }
+
+    private double randomTime() {
+        Random r = new Random();
+        return 1 +(4 * r.nextDouble());
+    }
+
     public static void main(String[] args) {
         try {
             new GuiFederate().runFederate();
         } catch (RTIexception rtIexception) {
             rtIexception.printStackTrace();
         }
-
-
-
     }
 }

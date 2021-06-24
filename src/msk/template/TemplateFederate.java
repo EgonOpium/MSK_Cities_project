@@ -3,6 +3,7 @@ package msk.template;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
+
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
 
@@ -12,69 +13,71 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.Random;
 
-public class TemplateFederate {
+public abstract class TemplateFederate {
     public static final String READY_TO_RUN = "ReadyToRun";
 
-    private RTIambassador rtiamb;
-    private TemplateAmbassador fedamb;
-    private final double timeStep           = 10.0;
+    protected RTIambassador rtiamb;
+    protected TemplateAmbassador fedamb;
+    protected String federateName;
 
-    public void runFederate() throws RTIexception {
-//        rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
-//
-//        //TODO: Here I have to change path to FOM Model
-//        try
-//        {
-//            File fom = new File( "producer-consumer.fed" );
-//            rtiamb.createFederationExecution( "ExampleFederation",
-//                    fom.toURI().toURL() );
-//            log( "Created Federation" );
-//        }
-//        catch( FederationExecutionAlreadyExists exists )
-//        {
-//            log( "Didn't create federation, it already existed" );
-//        }
-//        catch(MalformedURLException urle )
-//        {
-//            log( "Exception processing fom: " + urle.getMessage() );
-//            urle.printStackTrace();
-//            return;
-//        }
-//
-//        // TODO: Still FOM Model needs to be changed
-//        fedamb = new TemplateAmbassador();
-//        rtiamb.joinFederationExecution( "ConsumerFederate", "ExampleFederation", fedamb );
-//        log( "Joined Federation as ProducerFederate");
-//
-//        rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
-//
-//        while( fedamb.isAnnounced == false )
-//        {
-//            rtiamb.tick();
-//        }
-//
-//        waitForUser();
-//
-//        rtiamb.synchronizationPointAchieved( READY_TO_RUN );
-//        log( "Achieved sync point: " +READY_TO_RUN+ ", waiting for federation..." );
-//        while( fedamb.isReadyToRun == false )
-//        {
-//            rtiamb.tick();
-//        }
-//
-//        enableTimePolicy();
-//
-//        publishAndSubscribe();
-//
-//        while (fedamb.running) {
-//            advanceTime(randomTime());
-//            sendInteraction(fedamb.federateTime + fedamb.federateLookahead);
-//            rtiamb.tick();
-//        }
-        log("You should not see this. - TemplateFederate run loop.");
+    public TemplateFederate(String name){
+        this.federateName = name;
     }
 
-    private void waitForUser()
+    protected void runFederate() throws RTIexception {
+        createRTIAmbassador();
+
+        try
+        {
+            File fom = new File("cars-bridges.fed");
+            rtiamb.createFederationExecution( "ExampleFederation",
+                    fom.toURI().toURL() );
+            log( "Created Federation" );
+        }
+        catch( FederationExecutionAlreadyExists exists )
+        {
+            log( "Didn't create federation, it already existed" );
+        }
+        catch( MalformedURLException urle )
+        {
+            log( "Exception processing fom: " + urle.getMessage() );
+            urle.printStackTrace();
+            return;
+        }
+
+        createAmbassador();
+
+        rtiamb.joinFederationExecution( federateName, "ExampleFederation", fedamb );
+        log( "Joined Federation as " + federateName );
+
+        rtiamb.registerFederationSynchronizationPoint( READY_TO_RUN, null );
+
+        while( fedamb.isAnnounced == false )
+        {
+            rtiamb.tick();
+        }
+
+        waitForUser();
+
+        rtiamb.synchronizationPointAchieved( READY_TO_RUN );
+        log( "Achieved sync point: " +READY_TO_RUN+ ", waiting for federation..." );
+
+        while( fedamb.isReadyToRun == false )
+        {
+            rtiamb.tick();
+        }
+        enableTimePolicy();
+
+
+        publishAndSubscribe();
+
+        while(fedamb.running) {
+            mainMethod();
+            rtiamb.tick();
+        }
+    }
+
+    protected void waitForUser()
     {
         log( " >>>>>>>>>> Press Enter to Continue <<<<<<<<<<" );
         BufferedReader reader = new BufferedReader( new InputStreamReader(System.in) );
@@ -89,7 +92,7 @@ public class TemplateFederate {
         }
     }
 
-    private void enableTimePolicy() throws RTIexception
+    protected void enableTimePolicy() throws RTIexception
     {
         LogicalTime currentTime = convertTime( fedamb.federateTime );
         LogicalTimeInterval lookahead = convertInterval( fedamb.federateLookahead );
@@ -109,32 +112,11 @@ public class TemplateFederate {
         }
     }
 
-    private void sendInteraction(double timeStep) throws RTIexception {
-        SuppliedParameters parameters =
-                RtiFactoryFactory.getRtiFactory().createSuppliedParameters();
-        Random random = new Random();
-        int quantityInt = random.nextInt(10) + 1;
-        byte[] quantity = EncodingHelpers.encodeInt(quantityInt);
-
-        int interactionHandle = rtiamb.getInteractionClassHandle("InteractionRoot.GetProduct");
-        int quantityHandle = rtiamb.getParameterHandle( "quantity", interactionHandle );
-
-        parameters.add(quantityHandle, quantity);
-
-        LogicalTime time = convertTime( timeStep );
-        log("Sending GetProduct: " + quantityInt);
-        // TSO
-        rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes(), time );
-//        // RO
-//        rtiamb.sendInteraction( interactionHandle, parameters, "tag".getBytes() );
-    }
+    protected void sendInteraction(double timeStep) throws RTIexception {}
     // TODO: Important to change!
-    private void publishAndSubscribe() throws RTIexception {
-        int addProductHandle = rtiamb.getInteractionClassHandle( "InteractionRoot.GetProduct" );
-        rtiamb.publishInteractionClass(addProductHandle);
-    }
+    protected void publishAndSubscribe() throws RTIexception {}
 
-    private void advanceTime( double timestep ) throws RTIexception
+    protected void advanceTime( double timestep ) throws RTIexception
     {
         log("requesting time advance for: " + timestep);
         // request the advance
@@ -147,37 +129,32 @@ public class TemplateFederate {
         }
     }
 
-    private double randomTime() {
-        Random r = new Random();
-        return 1 +(4 * r.nextDouble());
-    }
-
-    private LogicalTime convertTime( double time )
+    protected LogicalTime convertTime( double time )
     {
         // PORTICO SPECIFIC!!
         return new DoubleTime( time );
     }
 
-    /**
-     * Same as for {@link #convertTime(double)}
-     */
-    private LogicalTimeInterval convertInterval( double time )
+    protected LogicalTimeInterval convertInterval( double time )
     {
         // PORTICO SPECIFIC!!
         return new DoubleTimeInterval( time );
     }
 
-    public void log(String message)
+    protected void log(String message)
     {
-        System.out.println( "TemplateFederate   : " + message );
+        System.out.println( this.federateName+"  : " + message );
     }
 
-    public static void main(String[] args) {
-//        try {
-//            new ConsumerFederate().runFederate();
-//        } catch (RTIexception rtIexception) {
-//            rtIexception.printStackTrace();
-//        }
-    }
+    protected abstract void createRTIAmbassador() throws RTIexception;
+    protected abstract void createAmbassador();
+    protected abstract void mainMethod() throws RTIexception;
+//    public static void main(String[] args) {
+////        try {
+////            new ConsumerFederate().runFederate();
+////        } catch (RTIexception rtIexception) {
+////            rtIexception.printStackTrace();
+////        }
+//    }
 
 }

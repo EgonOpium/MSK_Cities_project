@@ -11,6 +11,7 @@ public class GuiFederate extends TemplateFederate {
 
     public GuiFederate() {
         super("GuiFederate");
+
     }
 
 
@@ -27,6 +28,7 @@ public class GuiFederate extends TemplateFederate {
     @Override
     protected void mainMethod() throws RTIexception {
         advanceTime(randomTime());
+
     }
 
 

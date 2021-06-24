@@ -34,7 +34,6 @@ public class TrafficAmbassador extends TemplateAmbassador {
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        this.lightsHandle = HandlersHelper.getInteractionHandleByName("InteractionRoot.ChangeLights");
         if(interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")){
             this.running = false;

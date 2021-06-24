@@ -5,102 +5,31 @@ import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.NullFederateAmbassador;
 import msk.HandlersHelper;
 import msk.car.CarFederate;
+import msk.template.TemplateAmbassador;
+import msk.template.TemplateFederate;
 import org.portico.impl.hla13.types.DoubleTime;
 
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Objects;
 
-public class StatisticsAmbassador extends NullFederateAmbassador {
+public class StatisticsAmbassador extends TemplateAmbassador {
 
-    protected boolean running = true;
-
-    protected double federateTime        = 0.0;
-    protected double federateLookahead   = 1.0;
-    protected boolean isRegulating       = false;
-    protected boolean isConstrained      = false;
-    protected boolean isAdvancing        = false;
-
-    protected boolean isAnnounced        = false;
-    protected boolean isReadyToRun       = false;
-
-    ArrayList<CarStatistic> carList = new ArrayList<CarStatistic>();
-    ArrayList<CarStatistic> carListFinished = new ArrayList<CarStatistic>();
-
-    public void timeRegulationEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isRegulating = true;
+    protected final StatisticsFederate statisticsFederate;
+    public StatisticsAmbassador(StatisticsFederate statisticsFederate) {
+        super(statisticsFederate);
+        this.statisticsFederate = statisticsFederate;
     }
 
-    public void timeConstrainedEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isConstrained = true;
-    }
-
-
-    public void synchronizationPointRegistrationFailed( String label )
-    {
-        log( "Failed to register sync point: " + label );
-    }
-
-    public void synchronizationPointRegistrationSucceeded( String label )
-    {
-        log( "Successfully registered sync point: " + label );
-    }
-
-    public void announceSynchronizationPoint( String label, byte[] tag )
-    {
-        log( "Synchronization point announced: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isAnnounced = true;
-    }
-
-    public void federationSynchronized( String label )
-    {
-        log( "Federation Synchronized: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isReadyToRun = true;
-    }
-
-
-    public void receiveInteraction(int interactionClass,
-                                   ReceivedInteraction theInteraction, byte[] tag) {
-
-        receiveInteraction(interactionClass, theInteraction, tag, null, null);
-    }
-
-    public void receiveInteraction(int interactionClass,
-                                   ReceivedInteraction theInteraction, byte[] tag,
-                                   LogicalTime theTime, EventRetractionHandle eventRetractionHandle) {
-        if (interactionClass == HandlersHelper
-                .getInteractionHandleByName("InteractionRoot.Finish")) {
-            running = false;
-            log( "Simulation stopped!" );
-        }
-    }
-
-    public void timeAdvanceGrant( LogicalTime theTime )
-    {
-        this.federateTime = convertTime( theTime );
-        this.isAdvancing = false;
-    }
-
-    private double convertTime( LogicalTime logicalTime )
-    {
-        // PORTICO SPECIFIC!!
-        return ((DoubleTime)logicalTime).getTime();
-    }
-
-    private void log(String message) {
+    @Override
+    protected void log(String message) {
         System.out.println("StatisticsAmbassador: " + message);
     }
 
     public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
         System.out.println("Pojawil sie nowy obiekt typu " + objectName);
 //        HandlersHelper.addObjectClassHandler(theObject, theObjectClass );
-        carList.add(new CarStatistic(theObject, federateTime));
+        statisticsFederate.carList.add(new CarStatistic(theObject, federateTime));
     }
 
     public void removeObjectInstance(int theObject, byte[] userSuppliedTag) throws ObjectNotKnown, FederateInternalError {
@@ -112,9 +41,9 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
     }
 
     public void removeObjectInstance(int theObject, byte[] userSuppliedTag, LogicalTime theTime, EventRetractionHandle retractionHandle) throws ObjectNotKnown, InvalidFederationTime, FederateInternalError {
-        for(CarStatistic car : carList){
+        for(CarStatistic car : statisticsFederate.carList){
             if(car.theObject == theObject){
-                carListFinished.add(car);
+                statisticsFederate.carListFinished.add(car);
             }
         }
     }
@@ -127,7 +56,7 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
     public void reflectAttributeValues(int theObject,
                                        ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
                                        EventRetractionHandle retractionHandle) {
-        for(CarStatistic car : carList){
+        for(CarStatistic car : statisticsFederate.carList){
             if (car.theObject == theObject){
 
                 try {
@@ -154,7 +83,30 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
             }
         }
 
-    }
 
+
+    }
+    @Override
+    public void receiveInteraction( int interactionClass,
+                                    ReceivedInteraction theInteraction,
+                                    byte[] tag )
+    {
+        // just pass it on to the other method for printing purposes
+        // passing null as the time will let the other method know it
+        // it from us, not from the RTI
+        receiveInteraction(interactionClass, theInteraction, tag, null, null);
+    }
+    @Override
+    public void receiveInteraction( int interactionClass,
+                                    ReceivedInteraction theInteraction, byte[] tag,
+                                    LogicalTime theTime,
+                                    EventRetractionHandle eventRetractionHandle )
+    {
+        if(interactionClass == HandlersHelper
+                .getInteractionHandleByName("InteractionRoot.Finish")){
+            this.running = false;
+            log( "Simulation stopped!" );
+        }
+    }
 
 }

@@ -107,6 +107,7 @@ public class BridgeAmbassador extends NullFederateAmbassador {
         if(interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")){
             this.running = false;
+            log( "Simulation stopped!" );
         }
     }
 }

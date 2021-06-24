@@ -77,6 +77,7 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
         if (interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")) {
             running = false;
+            log( "Simulation stopped!" );
         }
     }
 

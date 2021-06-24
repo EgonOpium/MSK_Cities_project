@@ -69,6 +69,7 @@ public class StatisticsFederate {
             advanceTime(1.0);
             rtiamb.tick();
         }
+
         for(CarStatistic car : fedamb.carListFinished){
             log("Car handle: "+car.theObject
                     +", \n Direction: "+car.getDirection()

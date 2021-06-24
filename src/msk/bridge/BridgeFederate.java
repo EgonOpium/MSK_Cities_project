@@ -20,7 +20,8 @@ public class BridgeFederate {
     private RTIambassador rtiamb;
     private BridgeAmbassador fedamb;
     private final double timeStep           = 1.0;
-
+    private int queueWest = 0;
+    private int queueEast = 0;
 
     public void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();

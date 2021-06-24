@@ -3,6 +3,7 @@ package msk.car;
 import hla.rti.*;
 import hla.rti.jlc.EncodingHelpers;
 import hla.rti.jlc.RtiFactoryFactory;
+import msk.Configuration;
 import msk.HandlersHelper;
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
@@ -16,6 +17,8 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.util.*;
+
+
 
 public class CarFederate {
     public static final String READY_TO_RUN = "ReadyToRun";
@@ -78,12 +81,12 @@ public class CarFederate {
         publishAndSubscribe();
 
 
-        for(int i=0;i<5;i++){
+        for(int i = 0; i< Configuration.initialCarNumber; i++){
             createCar();
         }
         Random rnd = new Random();
         while (fedamb.running) {
-            if(rnd.nextFloat() < 0.05){
+            if(rnd.nextFloat() < Configuration.makeNewCarChance){
                 createCar();
             }
             checkToDelete();
@@ -105,8 +108,13 @@ public class CarFederate {
             }
             else{
                 if(fedamb.federateTime == lastUpdate){
-                    advanceTime(lastUpdate + 10);
                     sendStopInteraction(fedamb.federateTime + fedamb.federateLookahead);
+                    log("Stop interaction sent.");
+                    for (int i = 0; i < 3; i++) {
+                        rtiamb.tick();
+                    }
+                    fedamb.running = false;
+
                 }
                 else{
                     log("Guess what now... :(");
@@ -195,8 +203,8 @@ public class CarFederate {
 
         rtiamb.sendInteraction(interactionHandle, parameters,"tag".getBytes(), time );
 
-        advanceTime(fedamb.federateTime + 10);
-        fedamb.running = false;
+//        advanceTime(fedamb.federateTime + 10);
+//        fedamb.running = false;
     }
 
     private void publishAndSubscribe() throws RTIexception {

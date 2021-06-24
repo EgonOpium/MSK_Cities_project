@@ -1,12 +1,10 @@
 package msk.car;
 
+import msk.Configuration;
+
 import java.util.Random;
 
 public class Car implements Comparable<Car>{
-    private int DISTANCE_WEST = 2500;
-    private int DISTANCE_EAST = 3500;
-    private int BRIDGE_LENGTH = 50;
-
     private float speed;
     private float bridge_speed;
 
@@ -21,15 +19,15 @@ public class Car implements Comparable<Car>{
     public Car(int objectHandle, double currentTime){
         if(rnd.nextBoolean()){
             direction = "WEST";
-            distance = DISTANCE_WEST;
+            distance = Configuration.distanceWest;
         }
         else{
             direction = "EAST";
-            distance = DISTANCE_EAST;
+            distance = Configuration.distanceEast;
         }
         position = "TO_BRIDGE";
-        speed = rnd.nextInt(10)+50;
-        bridge_speed = rnd.nextInt(5)+30;
+        speed = rnd.nextInt(Configuration.carSpeedDiff)+ Configuration.carSpeedMin;
+        bridge_speed = rnd.nextInt(Configuration.bridgeCarSpeedDiff)+Configuration.bridgeCarSpeedMin;
 
         this.objectHandle = objectHandle;
 
@@ -46,7 +44,7 @@ public class Car implements Comparable<Car>{
             log("Next update setted to: "+nextUpdate);
         }
         else if(position == "ON_BRIDGE"){
-            nextUpdate = currentTime + ((double)BRIDGE_LENGTH / (double)this.bridge_speed );
+            nextUpdate = currentTime + ((double)Configuration.distanceBridge / (double)this.bridge_speed );
             log("Next update setted to: "+nextUpdate);
         }
         else if(position == "AFTER_BRIDGE"){
@@ -65,7 +63,7 @@ public class Car implements Comparable<Car>{
         }
         else if(status == "AFTER_BRIDGE"){
             position = status;
-            distance = (direction == "WEST") ? DISTANCE_EAST : DISTANCE_WEST;
+            distance = (direction == "WEST") ? Configuration.distanceEast : Configuration.distanceWest;
         }
         else{
             position = status;

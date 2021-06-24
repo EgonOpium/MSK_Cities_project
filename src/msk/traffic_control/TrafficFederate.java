@@ -18,7 +18,6 @@ public class TrafficFederate {
 
     private RTIambassador rtiamb;
     private TrafficAmbassador fedamb;
-    private final double timeStep           = 10.0;
 
     boolean lights_west = false;
     boolean lights_east = false;
@@ -27,7 +26,6 @@ public class TrafficFederate {
     public void runFederate() throws RTIexception {
         rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
 
-        //TODO: Here I have to change path to FOM Model
         try
         {
             File fom = new File( "cars-bridges.fed" );
@@ -46,7 +44,6 @@ public class TrafficFederate {
             return;
         }
 
-        // TODO: Still FOM Model needs to be changed
         fedamb = new TrafficAmbassador();
         rtiamb.joinFederationExecution( "TrafficFederate", "ExampleFederation", fedamb );
         log( "Joined Federation as TrafficFederate");

@@ -3,95 +3,22 @@ package msk.traffic_control;
 import hla.rti.EventRetractionHandle;
 import hla.rti.LogicalTime;
 import hla.rti.ReceivedInteraction;
-import hla.rti.jlc.NullFederateAmbassador;
 import msk.HandlersHelper;
-import msk.car.CarFederate;
-import org.portico.impl.hla13.types.DoubleTime;
+import msk.template.TemplateAmbassador;
 
-public class TrafficAmbassador extends NullFederateAmbassador {
-
-    protected double federateTime        = 0.0;
-    protected double federateLookahead   = 1.0;
-
-    protected boolean isRegulating       = false;
-    protected boolean isConstrained      = false;
-    protected boolean isAdvancing        = false;
-
-    protected boolean isAnnounced        = false;
-    protected boolean isReadyToRun       = false;
-
-    protected boolean running 			 = true;
-
-    //-----------------------------------------------------------------
-    //
-    //              HERE IS THE PLACE FOR EXTERNAL VARIABLES
-    //
-    //-----------------------------------------------------------------
-
-    protected int lightsHandle = 0;
-
-    private double convertTime( LogicalTime logicalTime )
-    {
-        // PORTICO SPECIFIC!!
-        return ((DoubleTime)logicalTime).getTime();
+public class TrafficAmbassador extends TemplateAmbassador {
+    private final TrafficFederate trafficFederate;
+    public int lightsHandle = 0;
+    public TrafficAmbassador(TrafficFederate trafficFederate){
+        super(trafficFederate);
+        this.trafficFederate = trafficFederate;
     }
-
-    private void log( String message )
+    @Override
+    protected void log( String message )
     {
-        System.out.println( "TrafficFederateAmbassador: " + message );
+        System.out.println( "TrafficFederateAmbassador: "+ message );
     }
-
-    public void synchronizationPointRegistrationFailed( String label )
-    {
-        log( "Failed to register sync point: " + label );
-    }
-
-    public void synchronizationPointRegistrationSucceeded( String label )
-    {
-        log( "Successfully registered sync point: " + label );
-    }
-
-    public void announceSynchronizationPoint( String label, byte[] tag )
-    {
-        log( "Synchronization point announced: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isAnnounced = true;
-    }
-
-    public void federationSynchronized( String label )
-    {
-        log( "Federation Synchronized: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isReadyToRun = true;
-    }
-
-    /**
-     * The RTI has informed us that time regulation is now enabled.
-     */
-    public void timeRegulationEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isRegulating = true;
-    }
-
-    public void timeConstrainedEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isConstrained = true;
-    }
-
-    public void timeAdvanceGrant( LogicalTime theTime )
-    {
-        this.federateTime = convertTime( theTime );
-        this.isAdvancing = false;
-    }
-
-    //-----------------------------------------------------------------
-    //
-    //              HERE IS THE PLACE FOR EXTERNAL METHODS
-    //
-    //-----------------------------------------------------------------
-
+    @Override
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,
                                     byte[] tag )
@@ -101,14 +28,13 @@ public class TrafficAmbassador extends NullFederateAmbassador {
         // it from us, not from the RTI
         receiveInteraction(interactionClass, theInteraction, tag, null, null);
     }
-
+    @Override
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction, byte[] tag,
                                     LogicalTime theTime,
                                     EventRetractionHandle eventRetractionHandle )
     {
-        StringBuilder builder = new StringBuilder( "Interaction Received:" );
-
+        this.lightsHandle = HandlersHelper.getInteractionHandleByName("InteractionRoot.ChangeLights");
         if(interactionClass == HandlersHelper
                 .getInteractionHandleByName("InteractionRoot.Finish")){
             this.running = false;

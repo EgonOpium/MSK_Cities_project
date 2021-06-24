@@ -1,9 +1,6 @@
 package msk.template;
 
 import hla.rti.*;
-import hla.rti.jlc.EncodingHelpers;
-import hla.rti.jlc.RtiFactoryFactory;
-
 import org.portico.impl.hla13.types.DoubleTime;
 import org.portico.impl.hla13.types.DoubleTimeInterval;
 
@@ -11,7 +8,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.util.Random;
+
 
 public abstract class TemplateFederate {
     public static final String READY_TO_RUN = "ReadyToRun";
@@ -75,6 +72,25 @@ public abstract class TemplateFederate {
             mainMethod();
             rtiamb.tick();
         }
+
+        rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
+        log( "Resigned from Federation" );
+
+        try
+        {
+            rtiamb.destroyFederationExecution( "ExampleFederation" );
+            log( "Destroyed Federation" );
+        }
+        catch( FederationExecutionDoesNotExist dne )
+        {
+            log( "No need to destroy federation, it doesn't exist" );
+        }
+        catch( FederatesCurrentlyJoined fcj )
+        {
+            log( "Didn't destroy federation, federates still joined" );
+        }
+
+
     }
 
     protected void waitForUser()
@@ -113,7 +129,7 @@ public abstract class TemplateFederate {
     }
 
     protected void sendInteraction(double timeStep) throws RTIexception {}
-    // TODO: Important to change!
+
     protected void publishAndSubscribe() throws RTIexception {}
 
     protected void advanceTime( double timestep ) throws RTIexception
@@ -149,12 +165,5 @@ public abstract class TemplateFederate {
     protected abstract void createRTIAmbassador() throws RTIexception;
     protected abstract void createAmbassador();
     protected abstract void mainMethod() throws RTIexception;
-//    public static void main(String[] args) {
-////        try {
-////            new ConsumerFederate().runFederate();
-////        } catch (RTIexception rtIexception) {
-////            rtIexception.printStackTrace();
-////        }
-//    }
 
 }

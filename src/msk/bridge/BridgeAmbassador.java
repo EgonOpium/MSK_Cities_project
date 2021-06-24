@@ -1,94 +1,34 @@
 package msk.bridge;
 
-import hla.rti.EventRetractionHandle;
-import hla.rti.LogicalTime;
-import hla.rti.ReceivedInteraction;
-import hla.rti.jlc.NullFederateAmbassador;
+import hla.rti.*;
+import hla.rti.jlc.EncodingHelpers;
 import msk.HandlersHelper;
-import msk.car.CarFederate;
-import org.portico.impl.hla13.types.DoubleTime;
+import msk.statistics.CarStatistic;
+import msk.template.TemplateAmbassador;
 
-public class BridgeAmbassador extends NullFederateAmbassador {
-    protected double federateTime        = 0.0;
-    protected double federateLookahead   = 1.0;
+import java.util.ArrayList;
+import java.util.Objects;
 
-    protected boolean isRegulating       = false;
-    protected boolean isConstrained      = false;
-    protected boolean isAdvancing        = false;
 
-    protected boolean isAnnounced        = false;
-    protected boolean isReadyToRun       = false;
+public class BridgeAmbassador extends TemplateAmbassador {
 
-    protected boolean running 			 = true;
-
-    //-----------------------------------------------------------------
-    //
-    //              HERE IS THE PLACE FOR EXTERNAL VARIABLES
-    //
-    //-----------------------------------------------------------------
-
-    private double convertTime( LogicalTime logicalTime )
-    {
-        // PORTICO SPECIFIC!!
-        return ((DoubleTime)logicalTime).getTime();
+    private ArrayList<Integer> carQueueWest;
+    private ArrayList<Integer> carQueueEast;
+    private ArrayList<Integer> onBridge;
+    private boolean bridgeFree;
+    public BridgeAmbassador(BridgeFederate bridgeFederate){
+        super(bridgeFederate);
+        carQueueWest = new ArrayList<>();
+        carQueueEast = new ArrayList<>();
+        onBridge = new ArrayList<>();
+        bridgeFree = true;
     }
-
-    private void log( String message )
+    @Override
+    protected void log( String message )
     {
-        System.out.println( "TrafficFederateAmbassador: " + message );
+        System.out.println( "BridgeFederateAmbassador: "+ message );
     }
-
-    public void synchronizationPointRegistrationFailed( String label )
-    {
-        log( "Failed to register sync point: " + label );
-    }
-
-    public void synchronizationPointRegistrationSucceeded( String label )
-    {
-        log( "Successfully registered sync point: " + label );
-    }
-
-    public void announceSynchronizationPoint( String label, byte[] tag )
-    {
-        log( "Synchronization point announced: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isAnnounced = true;
-    }
-
-    public void federationSynchronized( String label )
-    {
-        log( "Federation Synchronized: " + label );
-        if( label.equals(CarFederate.READY_TO_RUN) )
-            this.isReadyToRun = true;
-    }
-
-    /**
-     * The RTI has informed us that time regulation is now enabled.
-     */
-    public void timeRegulationEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isRegulating = true;
-    }
-
-    public void timeConstrainedEnabled( LogicalTime theFederateTime )
-    {
-        this.federateTime = convertTime( theFederateTime );
-        this.isConstrained = true;
-    }
-
-    public void timeAdvanceGrant( LogicalTime theTime )
-    {
-        this.federateTime = convertTime( theTime );
-        this.isAdvancing = false;
-    }
-
-    //-----------------------------------------------------------------
-    //
-    //              HERE IS THE PLACE FOR EXTERNAL METHODS
-    //
-    //-----------------------------------------------------------------
-
+    @Override
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction,
                                     byte[] tag )
@@ -98,7 +38,7 @@ public class BridgeAmbassador extends NullFederateAmbassador {
         // it from us, not from the RTI
         receiveInteraction(interactionClass, theInteraction, tag, null, null);
     }
-
+    @Override
     public void receiveInteraction( int interactionClass,
                                     ReceivedInteraction theInteraction, byte[] tag,
                                     LogicalTime theTime,
@@ -109,5 +49,73 @@ public class BridgeAmbassador extends NullFederateAmbassador {
             this.running = false;
             log( "Simulation stopped!" );
         }
+    }
+    @Override
+    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
+        System.out.println("Pojawil sie nowy obiekt typu " + objectName);
+//        HandlersHelper.addObjectClassHandler(theObject, theObjectClass );
+//        carList.add(new CarStatistic(theObject, federateTime));
+    }
+    @Override
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag) throws ObjectNotKnown, FederateInternalError {
+//        try {
+//            removeObjectInstance(theObject, userSuppliedTag, null, null);
+//        } catch (InvalidFederationTime invalidFederationTime) {
+//            invalidFederationTime.printStackTrace();
+//        }
+    }
+    @Override
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag, LogicalTime theTime, EventRetractionHandle retractionHandle) throws ObjectNotKnown, InvalidFederationTime, FederateInternalError {
+//        for(CarStatistic car : carList){
+//            if(car.theObject == theObject){
+//                carListFinished.add(car);
+//            }
+//        }
+    }
+
+    @Override
+    public void reflectAttributeValues(int theObject,
+                                       ReflectedAttributes theAttributes, byte[] tag) {
+        reflectAttributeValues(theObject, theAttributes, tag, null, null);
+    }
+    // position posibilities - TO_BRIDGE, ON_BRIDGE, AFTER_BRIDGE, IN_QUEUE
+    @Override
+    public void reflectAttributeValues(int theObject,
+                                       ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
+                                       EventRetractionHandle retractionHandle) {
+
+        try {
+            if( EncodingHelpers.decodeString(theAttributes.getValue(0)) == "IN_QUEUE_WEST"){
+                this.carQueueWest.add(theObject);
+            }
+            else if( EncodingHelpers.decodeString(theAttributes.getValue(0)) == "IN_QUEUE_EAST"){
+                this.carQueueEast.add(theObject);
+            }
+            else if( EncodingHelpers.decodeString(theAttributes.getValue(0)) == "ON_BRIDGE"){
+                for (Integer car:carQueueEast) {
+                    if(car == theObject) {
+                        if (carQueueEast.contains(car)) {
+                            carQueueEast.remove(car);
+                        } else {
+                            carQueueWest.remove(car);
+                        }
+                        onBridge.add(car);
+                    }
+                }
+                if(onBridge.size()>0){
+                    this.bridgeFree = false;
+                }
+            }
+            else if( EncodingHelpers.decodeString(theAttributes.getValue(0)) == "AFTER_BRIDGE"){
+                onBridge.remove(theObject);
+                if(onBridge.size()>0){
+                    this.bridgeFree = false;
+                }
+            }
+        } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+            arrayIndexOutOfBounds.printStackTrace();
+        }
+
+
     }
 }

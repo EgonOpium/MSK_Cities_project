@@ -153,35 +153,6 @@ public class StatisticsAmbassador extends NullFederateAmbassador {
                 }
             }
         }
-//        log("Reflected attributes...");
-//        StringBuilder builder = new StringBuilder("Reflection for object:");
-//
-//        builder.append(" handle=" + theObject);
-////		builder.append(", tag=" + EncodingHelpers.decodeString(tag));
-//
-//        // print the attribute information
-//        builder.append(", attributeCount=" + theAttributes.size());
-//        builder.append("\n");
-//
-//        for (int i = 1; i < theAttributes.size(); i++) {
-//            try {
-//                // print the attibute handle
-//                builder.append("\tattributeHandle=");
-//                builder.append(theAttributes.getAttributeHandle(i));
-//                // print the attribute value
-//                builder.append(", attributeValue=");
-//                builder.append(EncodingHelpers.decodeString(theAttributes
-//                        .getValue(i)));
-//                builder.append(", time=");
-//                builder.append(theTime);
-//                builder.append("\n");
-//            } catch (ArrayIndexOutOfBounds aioob) {
-//                // won't happen
-//                log("Won't happen");
-//            }
-//        }
-//        log(builder.toString());
-
 
     }
 

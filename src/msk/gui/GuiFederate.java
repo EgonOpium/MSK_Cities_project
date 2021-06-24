@@ -2,15 +2,14 @@ package msk.gui;
 import hla.rti.RTIexception;
 import hla.rti.*;
 import hla.rti.jlc.RtiFactoryFactory;
-import msk.template.TemplateAmbassador;
+import msk.HandlersHelper;
 import msk.template.TemplateFederate;
 
 import java.util.Random;
 
 public class GuiFederate extends TemplateFederate {
 
-    private String federateName;
-    public GuiFederate() throws RTIexception {
+    public GuiFederate() {
         super("GuiFederate");
     }
 
@@ -38,7 +37,9 @@ public class GuiFederate extends TemplateFederate {
 
     @Override
     public void publishAndSubscribe() throws RTIexception{
-
+        int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
+        HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
+        rtiamb.subscribeInteractionClass(stopHandle);
     }
 
     private double randomTime() {

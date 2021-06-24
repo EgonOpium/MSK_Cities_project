@@ -1,25 +1,23 @@
 package msk.template;
 
 import hla.rti.LogicalTime;
-import hla.rti.RTIambassador;
 import hla.rti.jlc.NullFederateAmbassador;
-import msk.gui.GuiAmbassador;
 import org.portico.impl.hla13.types.DoubleTime;
 
 public abstract class TemplateAmbassador extends NullFederateAmbassador {
-    protected double federateTime        = 0.0;
-    protected double federateLookahead   = 1.0;
+    public double federateTime        = 0.0;
+    public double federateLookahead   = 1.0;
 
-    protected boolean isRegulating       = false;
-    protected boolean isConstrained      = false;
-    protected boolean isAdvancing        = false;
+    public boolean isRegulating       = false;
+    public boolean isConstrained      = false;
+    public boolean isAdvancing        = false;
 
-    protected boolean isAnnounced        = false;
-    protected boolean isReadyToRun       = false;
+    public boolean isAnnounced        = false;
+    public boolean isReadyToRun       = false;
 
-    protected boolean running 			 = true;
+    public boolean running 			 = true;
 
-    protected final TemplateFederate templateFederate;
+    public final TemplateFederate templateFederate;
 
     //-----------------------------------------------------------------
     //

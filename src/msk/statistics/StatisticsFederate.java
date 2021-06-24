@@ -83,22 +83,7 @@ public class StatisticsFederate {
 
         log("Time check before finish: "+fedamb.federateTime);
 
-        rtiamb.resignFederationExecution( ResignAction.NO_ACTION );
-        log( "Resigned from Federation" );
 
-        try
-        {
-            rtiamb.destroyFederationExecution( "ExampleFederation" );
-            log( "Destroyed Federation" );
-        }
-        catch( FederationExecutionDoesNotExist dne )
-        {
-            log( "No need to destroy federation, it doesn't exist" );
-        }
-        catch( FederatesCurrentlyJoined fcj )
-        {
-            log( "Didn't destroy federation, federates still joined" );
-        }
     }
 
     private void waitForUser() {

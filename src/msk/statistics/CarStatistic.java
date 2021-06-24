@@ -2,7 +2,7 @@ package msk.statistics;
 
 public class CarStatistic {
 
-    int theObject;
+    public int theObject;
     private double creationTime = 0;
     private double timeToBridge = 0;
     private double timeOnBridge = 0;

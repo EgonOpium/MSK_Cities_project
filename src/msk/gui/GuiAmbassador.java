@@ -1,10 +1,12 @@
 package msk.gui;
 
-import hla.rti.EventRetractionHandle;
-import hla.rti.LogicalTime;
-import hla.rti.ReceivedInteraction;
+import hla.rti.*;
+import hla.rti.jlc.EncodingHelpers;
 import msk.HandlersHelper;
+import msk.statistics.CarStatistic;
 import msk.template.TemplateAmbassador;
+
+import java.util.Objects;
 
 public class GuiAmbassador extends TemplateAmbassador {
     private final GuiFederate guiFederate;
@@ -37,6 +39,62 @@ public class GuiAmbassador extends TemplateAmbassador {
                 .getInteractionHandleByName("InteractionRoot.Finish")){
             this.running = false;
             log( "Simulation stopped!" );
+        }
+    }
+
+    public void discoverObjectInstance(int theObject, int theObjectClass, String objectName) {
+        System.out.println("Pojawil sie nowy obiekt typu " + objectName);
+//        HandlersHelper.addObjectClassHandler(theObject, theObjectClass );
+        guiFederate.carList.add(new CarStatistic(theObject, federateTime));
+    }
+
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag) throws ObjectNotKnown, FederateInternalError {
+        try {
+            removeObjectInstance(theObject, userSuppliedTag, null, null);
+        } catch (InvalidFederationTime invalidFederationTime) {
+            invalidFederationTime.printStackTrace();
+        }
+    }
+
+    public void removeObjectInstance(int theObject, byte[] userSuppliedTag, LogicalTime theTime, EventRetractionHandle retractionHandle) throws ObjectNotKnown, InvalidFederationTime, FederateInternalError {
+        for(CarStatistic car : guiFederate.carList){
+            if(car.theObject == theObject){
+                guiFederate.carListFinished.add(car);
+            }
+        }
+    }
+
+    public void reflectAttributeValues(int theObject,
+                                       ReflectedAttributes theAttributes, byte[] tag) {
+        reflectAttributeValues(theObject, theAttributes, tag, null, null);
+    }
+    // position posibilities - TO_BRIDGE, ON_BRIDGE, AFTER_BRIDGE, IN_QUEUE
+    public void reflectAttributeValues(int theObject,
+                                       ReflectedAttributes theAttributes, byte[] tag, LogicalTime theTime,
+                                       EventRetractionHandle retractionHandle) {
+        for (CarStatistic car : guiFederate.carList) {
+            if (car.theObject == theObject) {
+
+                try {
+                    String status = EncodingHelpers.decodeString(theAttributes.getValue(0));
+                    String direction = EncodingHelpers.decodeString(theAttributes.getValue(1));
+                    car.setDirection(direction);
+                    if (Objects.equals(status, new String("ON_BRIDGE"))) {
+                        car.setTimeToBridge(federateTime);
+                    } else if (Objects.equals(status, new String("AFTER_BRIDGE"))) {
+                        car.setTimeOnBridge(federateTime);
+
+                    } else if (Objects.equals(status, new String("END"))) {
+                        car.setTimeAfterBridge(federateTime);
+                        car.setFinishTime(federateTime);
+                    } else {
+                        guiFederate.updateGui("Car: " + theObject + ", status: " + status);
+                        log("Car: " + theObject + ", status: " + status);
+                    }
+                } catch (ArrayIndexOutOfBounds arrayIndexOutOfBounds) {
+                    arrayIndexOutOfBounds.printStackTrace();
+                }
+            }
         }
     }
 }

@@ -3,21 +3,33 @@ import hla.rti.RTIexception;
 import hla.rti.*;
 import hla.rti.jlc.RtiFactoryFactory;
 import msk.HandlersHelper;
+import msk.statistics.CarStatistic;
 import msk.template.TemplateFederate;
 
+import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Random;
 
 public class GuiFederate extends TemplateFederate {
+    protected ArrayList<CarStatistic> carList = new ArrayList<CarStatistic>();
+    protected ArrayList<CarStatistic> carListFinished = new ArrayList<CarStatistic>();
+    private boolean start;
 
     public GuiFederate() {
         super("GuiFederate");
-
+        start = false;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new MainFrame("Gui");
+            }
+        });
     }
-
 
     @Override
     protected void createRTIAmbassador() throws RTIexception{
         this.rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+
     }
 
     @Override
@@ -28,9 +40,15 @@ public class GuiFederate extends TemplateFederate {
     @Override
     protected void mainMethod() throws RTIexception {
         advanceTime(randomTime());
-
+        if(!start){
+            start=true;
+            MainFrame.start();
+        }
     }
 
+    public void updateGui(String text){
+        log("Gui otrzymalo informacje: "+text);
+    }
 
     @Override
     public void sendInteraction(double timeStep) throws RTIexception{
@@ -42,6 +60,16 @@ public class GuiFederate extends TemplateFederate {
         int stopHandle = rtiamb.getInteractionClassHandle("InteractionRoot.Finish");
         HandlersHelper.addInteractionClassHandler("InteractionRoot.Finish", stopHandle);
         rtiamb.subscribeInteractionClass(stopHandle);
+
+        int simObjectClassHandle = rtiamb.getObjectClassHandle("ObjectRoot.Car");
+        int speedHandle = rtiamb.getAttributeHandle("position", simObjectClassHandle);
+        int directionHandle = rtiamb.getAttributeHandle("direction", simObjectClassHandle);
+
+        AttributeHandleSet attributes = RtiFactoryFactory.getRtiFactory()
+                .createAttributeHandleSet();
+        attributes.add(speedHandle);
+        attributes.add(directionHandle);
+        rtiamb.subscribeObjectClassAttributes(simObjectClassHandle, attributes);
     }
 
     private double randomTime() {

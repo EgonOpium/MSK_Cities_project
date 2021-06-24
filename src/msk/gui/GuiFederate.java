@@ -4,19 +4,28 @@ import hla.rti.*;
 import hla.rti.jlc.RtiFactoryFactory;
 import msk.HandlersHelper;
 import msk.template.TemplateFederate;
-
+import javax.swing.SwingUtilities;
 import java.util.Random;
 
 public class GuiFederate extends TemplateFederate {
 
+    private boolean start;
+
     public GuiFederate() {
         super("GuiFederate");
+        start = false;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new MainFrame("Gui");
+            }
+        });
     }
-
 
     @Override
     protected void createRTIAmbassador() throws RTIexception{
         this.rtiamb = RtiFactoryFactory.getRtiFactory().createRtiAmbassador();
+
     }
 
     @Override
@@ -27,8 +36,16 @@ public class GuiFederate extends TemplateFederate {
     @Override
     protected void mainMethod() throws RTIexception {
         advanceTime(randomTime());
+        if(!start){
+            start=true;
+            MainFrame.start();
+        }
+        updateGui();
     }
 
+    private void updateGui(){
+
+    }
 
     @Override
     public void sendInteraction(double timeStep) throws RTIexception{
